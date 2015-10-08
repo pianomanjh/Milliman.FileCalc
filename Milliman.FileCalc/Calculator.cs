@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Milliman.FileCalc
@@ -42,5 +44,43 @@ namespace Milliman.FileCalc
 
         public string VarName;
         public IEnumerable<decimal> Values;
+    }
+
+    public interface IProjector<T>
+    {
+        IEnumerable<T> Map(IEnumerable<string> input);
+    }
+
+    public class SceneProjector : IProjector<Scene>
+    {
+        private readonly char _delimiter;
+
+        public SceneProjector(char delimiter)
+        {
+            _delimiter = delimiter;
+        }
+
+        public IEnumerable<Scene> Map(IEnumerable<string> input)
+        {
+            foreach (var i in input)
+            {
+                var values = i.Split(_delimiter);
+                yield return new Scene(values[1], values.Skip(2).Select(decimal.Parse));
+            }
+        }
+    }
+
+    public class FileParser
+    {
+        public IEnumerable<string> Do(string path, bool skipFirst = true)
+        {
+            using (StreamReader sr = new StreamReader(File.OpenRead(path)))
+            {
+                if (skipFirst)
+                    sr.ReadLine();
+
+                yield return sr.ReadLine();
+            }
+        }
     }
 }
