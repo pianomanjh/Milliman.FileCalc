@@ -1,33 +1,46 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Milliman.FileCalc
 {
     public class Calculator
     {
-    }
+        private readonly Configuration _config;
 
-    public interface IOperation
-    {
-        decimal Calc(IEnumerable<decimal> values);
-    }
-
-    public class Min : IOperation
-    {
-        public decimal Calc(IEnumerable<decimal> values)
+        public Calculator(Configuration config)
         {
-            return values.Min();
+            _config = config;
+        }
+
+        public IEnumerable<CalcResult> PerformAllCalculations(IEnumerable<Scene> input)
+        {
+            return _config.Calculations.Select(x => Crunch(input, x));
+        }
+
+        public CalcResult Crunch(IEnumerable<Scene> input, Calculation c)
+        {
+            return new CalcResult()
+            {
+                VarName = c.Variable,
+                Result = c.StatCalculation.Calc(input.Where(x => x.VarName == c.Variable).Select(x => c.PeriodChoice.Calc(x.Values)))
+            };
+        } 
+
+        public decimal FindPeriod(IEnumerable<decimal> input, ICalculation periodChoice)
+        {
+            return periodChoice.Calc(input);
         }
     }
 
-    public class Max : IOperation
+    public struct Scene
     {
-        public decimal Calc(IEnumerable<decimal> values)
+        public Scene(string varName, IEnumerable<decimal> values)
         {
-            return values.Max();
+            VarName = varName;
+            Values = values;
         }
+
+        public string VarName;
+        public IEnumerable<decimal> Values;
     }
 }
