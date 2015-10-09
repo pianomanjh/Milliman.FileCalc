@@ -11,9 +11,9 @@ namespace Milliman.FileCalc.Runner
 
         public void Run(string configPath, string inputPath, string outputPath)
         {
-            var calculations = this.LoadCalculations(configPath);
+            var calculations = this.StreamInput(configPath, new CalculationProjector(delimiter)).ToList();
 
-            var inputStream = this.StreamInput(inputPath);
+            var inputStream = this.StreamInput(inputPath, new SceneProjector(delimiter), true);
 
             var outputStream = Calculator.RunCalculations(inputStream, calculations);
             var formattedOutput = outputStream.Select(o => String.Format("{0}{1}{2}", o.VarName, delimiter, o.Result));
@@ -21,17 +21,11 @@ namespace Milliman.FileCalc.Runner
             File.WriteAllLines(outputPath, formattedOutput);
         }
     
-        private IEnumerable<Scene> StreamInput(string path)
+        private IEnumerable<T> StreamInput<T>(string path, IProjector<T> map, bool skipHeader = false)
         {
-            var map = new SceneProjector(delimiter);
-            return map.Map(File.ReadLines(path));
-        }
-
-        private IReadOnlyList<Calculation> LoadCalculations(string path)
-        {
-            var map = new CalculationProjector(delimiter);
             var input = File.ReadLines(path);
-            return map.Map(input).ToList();
+            if (skipHeader) input = input.Skip(1);
+            return map.Map(input);
         }
     }
 }
