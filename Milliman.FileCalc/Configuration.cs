@@ -17,6 +17,12 @@ namespace Milliman.FileCalc
         public string Variable { get; set; }
         public ICalculation StatCalculation { get; set; }
         public ICalculation PeriodChoice { get; set; }
+        public IList<decimal> Accumulated { get; }
+
+        public Calculation()
+        {
+            Accumulated = new List<decimal>();
+        } 
     }
 
     public interface ICalculation

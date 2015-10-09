@@ -5,82 +5,18 @@ using System.Linq;
 
 namespace Milliman.FileCalc
 {
-    public class Calculator
+    public static class Calculator
     {
-        private readonly Configuration _config;
-
-        public Calculator(Configuration config)
+        public static IEnumerable<KeyedResult> RunCalculations(IEnumerable<Scene> input, IEnumerable<Calculation> c)
         {
-            _config = config;
-        }
-
-        public IEnumerable<CalcResult> PerformAllCalculations(IEnumerable<Scene> input)
-        {
-            return _config.Calculations.Select(x => Crunch(input, x));
-        }
-
-        public CalcResult Crunch(IEnumerable<Scene> input, Calculation c)
-        {
-            return new CalcResult()
+            foreach (var scene in input)
             {
-                VarName = c.Variable,
-                Result = c.StatCalculation.Calc(input.Where(x => x.VarName == c.Variable).Select(x => c.PeriodChoice.Calc(x.Values)))
-            };
-        } 
-
-        public decimal FindPeriod(IEnumerable<decimal> input, ICalculation periodChoice)
-        {
-            return periodChoice.Calc(input);
-        }
-    }
-
-    public struct Scene
-    {
-        public Scene(string varName, IEnumerable<decimal> values)
-        {
-            VarName = varName;
-            Values = values;
-        }
-
-        public string VarName;
-        public IEnumerable<decimal> Values;
-    }
-
-    public interface IProjector<T>
-    {
-        IEnumerable<T> Map(IEnumerable<string> input);
-    }
-
-    public class SceneProjector : IProjector<Scene>
-    {
-        private readonly char _delimiter;
-
-        public SceneProjector(char delimiter)
-        {
-            _delimiter = delimiter;
-        }
-
-        public IEnumerable<Scene> Map(IEnumerable<string> input)
-        {
-            foreach (var i in input)
-            {
-                var values = i.Split(_delimiter);
-                yield return new Scene(values[1], values.Skip(2).Select(decimal.Parse));
+                foreach (var calc in c.Where(x => x.Variable == scene.VarName))
+                     calc.Accumulated.Add(calc.PeriodChoice.Calc(scene.Values));
             }
-        }
-    }
 
-    public class FileParser
-    {
-        public IEnumerable<string> Do(string path, bool skipFirst = true)
-        {
-            using (StreamReader sr = new StreamReader(File.OpenRead(path)))
-            {
-                if (skipFirst)
-                    sr.ReadLine();
-
-                yield return sr.ReadLine();
-            }
+            return
+                c.Select(x => new KeyedResult { Result = x.StatCalculation.Calc(x.Accumulated), VarName = x.Variable });
         }
     }
 }
