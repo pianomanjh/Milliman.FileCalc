@@ -11,12 +11,12 @@ namespace Milliman.FileCalc.Runner
 
         public void Run(string configPath, string inputPath, string outputPath)
         {
-            var config = this.LoadCalculations(configPath);
+            var calculations = this.LoadCalculations(configPath);
 
-            var input = this.StreamInput(inputPath);
+            var inputStream = this.StreamInput(inputPath);
 
-            var output = Calculator.RunCalculations(input, config);
-            var formattedOutput = output.Select(o => String.Format("{0}{1}{2}", o.VarName, delimiter, o.Result));
+            var outputStream = Calculator.RunCalculations(inputStream, calculations);
+            var formattedOutput = outputStream.Select(o => String.Format("{0}{1}{2}", o.VarName, delimiter, o.Result));
 
             File.WriteAllLines(outputPath, formattedOutput);
         }
@@ -27,7 +27,7 @@ namespace Milliman.FileCalc.Runner
             return map.Map(File.ReadLines(path));
         }
 
-        private IEnumerable<Calculation> LoadCalculations(string path)
+        private IReadOnlyList<Calculation> LoadCalculations(string path)
         {
             var map = new CalculationProjector(delimiter);
             var input = File.ReadLines(path);

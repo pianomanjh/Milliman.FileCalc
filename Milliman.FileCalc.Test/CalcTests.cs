@@ -12,16 +12,8 @@ namespace Milliman.FileCalc.Test
         [Test]
         public void NoInputZeroResult()
         {
-            var calculations = new List<Calculation>
-                                   {
-                                       new Calculation()
-                                           {
-                                               Variable = "CashPrem",
-                                               StatCalculation = new Average(),
-                                               PeriodChoice = new Max()
-                                           }
-                                   };
-            
+            var calculations = new[] { new Calculation() { Variable = "CashPrem", StatCalculation = new Average(), PeriodChoice = new Max() } };
+
             var result = Calculator.RunCalculations(new List<Scene> {}, calculations).FirstOrDefault();
 
             Assert.AreEqual("CashPrem", result.VarName);
